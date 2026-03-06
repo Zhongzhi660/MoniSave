@@ -6,6 +6,12 @@
   "type": "module",
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
+  "files": [
+    "dist/**",
+    "openclaw.plugin.json",
+    "package.json",
+    "CONFIG.example.md"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",

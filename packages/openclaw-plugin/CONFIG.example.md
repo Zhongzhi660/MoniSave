@@ -8,10 +8,14 @@ plugins:
   entries:
     monisave-thinking:
       config:
+        effortMode: "auto" # 可选：auto/low/medium/high/max
         tierToModelId:
           simple: "anthropic/claude-sonnet-4-6-low"
           medium: "anthropic/claude-sonnet-4-6-medium"
           complex: "anthropic/claude-sonnet-4-6-high"
+        # 可选：手动 mode 时直接映射（尤其是 max）
+        effortToModelId:
+          max: "anthropic/claude-opus-4-6"
         language: "en"   # 或 "zh"
 ```
 
@@ -21,4 +25,4 @@ plugins:
 
 安装插件后，在对话中可使用 `/savings` 查看本会话节省的 token 与预估金额；通过 Gateway RPC `monisave.stats` 可获取 `saved_tokens`、`saved_usd`、`request_count`。
 
-**本次用全力**：若某条消息希望临时使用 high 档 thinking，请参考 OpenClaw 官方文档中与 thinking 档位或 `/think` 相关的命令（若有）；或临时发送较复杂的问题以触发 complex 档位。
+可使用 `/monisave-mode` 查看当前模式，或 `/monisave-mode low|medium|high|max|auto` 进行切换。

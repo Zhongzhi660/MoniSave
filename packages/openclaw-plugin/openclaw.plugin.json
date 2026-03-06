@@ -13,6 +13,17 @@
         "complex": "anthropic/claude-sonnet-4-6-high"
       }
     },
+    "effortToModelId": {
+      "type": "object",
+      "description": "Optional direct effort-to-model mapping. Keys: low, medium, high, max.",
+      "default": {}
+    },
+    "effortMode": {
+      "type": "string",
+      "enum": ["auto", "low", "medium", "high", "max"],
+      "description": "Initial MoniSave mode at plugin startup.",
+      "default": "auto"
+    },
     "language": {
       "type": "string",
       "enum": ["zh", "en"],

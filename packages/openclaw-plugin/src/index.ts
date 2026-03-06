@@ -4,7 +4,7 @@
  */
 
 import { evaluate, getEffort, computeSavings, type Tier, type Usage } from '@monisave/heuristic-core';
-import { getModelIdForTier, getLanguage, type MonisavePluginConfig } from './config.js';
+import { getModelIdForTier, getModelIdForEffort, getLanguage, getInitialEffortMode, type MonisavePluginConfig, type EffortMode } from './config.js';
 import { strings } from './strings.js';
 
 /** In-memory session stats: saved tokens, saved USD, request count */
@@ -17,6 +17,7 @@ export interface SessionStats {
 let sessionStats: SessionStats = { saved_tokens: 0, saved_usd: 0, request_count: 0 };
 let lastTier: Tier = 'medium';
 let lastModelId: string = '';
+let currentMode: EffortMode = 'auto';
 
 /** Extract last user message text from hook context. Handles common OpenClaw shapes. */
 function extractLastUserMessage(ctx: Record<string, unknown>): string {
@@ -52,6 +53,32 @@ function formatSavings(stats: SessionStats, lang: 'zh' | 'en'): string {
     : strings.savings_message.en(stats.saved_tokens, money);
 }
 
+function parseModeArg(ctx: Record<string, unknown>): string {
+  const candidates: unknown[] = [
+    (ctx as { args?: unknown }).args,
+    (ctx as { commandArgs?: unknown }).commandArgs,
+    (ctx as { text?: unknown }).text,
+    (ctx as { message?: unknown }).message,
+    (ctx as { input?: unknown }).input,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) {
+      return c.trim().split(/\s+/)[0] ?? '';
+    }
+    if (Array.isArray(c) && c.length > 0) {
+      const first = c[0];
+      if (typeof first === 'string' && first.trim()) return first.trim();
+    }
+  }
+  return '';
+}
+
+function normalizeMode(raw: string): EffortMode | undefined {
+  const v = raw.toLowerCase();
+  if (v === 'auto' || v === 'low' || v === 'medium' || v === 'high' || v === 'max') return v;
+  return undefined;
+}
+
 export default function register(api: {
   registerHook: (name: string, handler: (ctx: Record<string, unknown>) => Promise<{ modelOverride?: string }> | { modelOverride?: string }) => void;
   registerCommand: (cmd: { name: string; description: string; handler: (ctx: Record<string, unknown>) => { text: string } | Promise<{ text: string }> }) => void;
@@ -64,20 +91,27 @@ export default function register(api: {
     ? (process.env.LANG ?? process.env.OPENCLAW_LANG)
     : undefined;
   const lang = getLanguage(pluginConfig, envLang);
+  currentMode = getInitialEffortMode(pluginConfig);
 
   api.registerHook('before_prompt_build', (ctx) => {
     try {
-      const lastUserMsg = extractLastUserMessage(ctx);
-      const messageCount = typeof (ctx as Record<string, unknown>).messageCount === 'number'
-        ? (ctx as Record<string, unknown>).messageCount as number
-        : undefined;
-      const scene = (ctx as Record<string, unknown>).scene as string | undefined;
-      const tier = evaluate(lastUserMsg, {
-        scene: scene === 'agent' ? 'agent' : undefined,
-        messageCount,
-      }) as Tier;
-      const modelId = getModelIdForTier(tier, pluginConfig);
-      lastTier = tier;
+      let modelId: string;
+      if (currentMode === 'auto') {
+        const lastUserMsg = extractLastUserMessage(ctx);
+        const messageCount = typeof (ctx as Record<string, unknown>).messageCount === 'number'
+          ? (ctx as Record<string, unknown>).messageCount as number
+          : undefined;
+        const scene = (ctx as Record<string, unknown>).scene as string | undefined;
+        const tier = evaluate(lastUserMsg, {
+          scene: scene === 'agent' ? 'agent' : undefined,
+          messageCount,
+        }) as Tier;
+        lastTier = tier;
+        modelId = getModelIdForTier(tier, pluginConfig);
+      } else {
+        lastTier = currentMode === 'low' ? 'simple' : currentMode === 'medium' ? 'medium' : 'complex';
+        modelId = getModelIdForEffort(currentMode, pluginConfig);
+      }
       lastModelId = modelId;
       return { modelOverride: modelId };
     } catch {
@@ -89,6 +123,28 @@ export default function register(api: {
     name: 'savings',
     description: lang === 'zh' ? strings.command_description.zh : strings.command_description.en,
     handler: () => ({ text: formatSavings(sessionStats, lang) }),
+  });
+
+  api.registerCommand({
+    name: 'monisave-mode',
+    description: lang === 'zh' ? strings.mode_command_description.zh : strings.mode_command_description.en,
+    handler: (ctx) => {
+      const raw = parseModeArg(ctx);
+      if (!raw) {
+        return { text: lang === 'zh' ? strings.mode_current.zh(currentMode) : strings.mode_current.en(currentMode) };
+      }
+      const mode = normalizeMode(raw);
+      if (!mode) {
+        return { text: lang === 'zh' ? strings.mode_usage.zh : strings.mode_usage.en };
+      }
+      currentMode = mode;
+      const base = lang === 'zh' ? strings.mode_set.zh(currentMode) : strings.mode_set.en(currentMode);
+      if (mode === 'max' && !pluginConfig?.effortToModelId?.max) {
+        const hint = lang === 'zh' ? strings.mode_max_hint.zh : strings.mode_max_hint.en;
+        return { text: `${base}\n${hint}` };
+      }
+      return { text: base };
+    },
   });
 
   if (api.registerGatewayMethod) {
