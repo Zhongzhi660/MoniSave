@@ -1,0 +1,17 @@
+{
+  "name": "monisave",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thinking token optimization for VS Code and OpenClaw",
+  "scripts": {
+    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": ["monisave", "thinking", "token", "vscode", "openclaw"],
+  "license": "MIT",
+  "workspaces": [
+    "packages/heuristic-core",
+    "packages/vscode-extension",
+    "packages/openclaw-plugin"
+  ]
+}

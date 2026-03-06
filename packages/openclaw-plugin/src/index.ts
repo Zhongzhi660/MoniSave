@@ -1,0 +1,111 @@
+/**
+ * MoniSave OpenClaw plugin: before_prompt_build hook + /savings command + monisave.stats RPC.
+ * All comments in English per plan.
+ */
+
+import { evaluate, getEffort, computeSavings, type Tier, type Usage } from '@monisave/heuristic-core';
+import { getModelIdForTier, getLanguage, type MonisavePluginConfig } from './config.js';
+import { strings } from './strings.js';
+
+/** In-memory session stats: saved tokens, saved USD, request count */
+export interface SessionStats {
+  saved_tokens: number;
+  saved_usd: number;
+  request_count: number;
+}
+
+let sessionStats: SessionStats = { saved_tokens: 0, saved_usd: 0, request_count: 0 };
+let lastTier: Tier = 'medium';
+let lastModelId: string = '';
+
+/** Extract last user message text from hook context. Handles common OpenClaw shapes. */
+function extractLastUserMessage(ctx: Record<string, unknown>): string {
+  const messages = ctx.messages as Array<{ role?: string; content?: string; text?: string }> | undefined;
+  if (Array.isArray(messages)) {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      const role = (m?.role ?? '').toLowerCase();
+      if (role === 'user' || role === 'human') {
+        const content = typeof m?.content === 'string' ? m.content : m?.text ?? '';
+        return content;
+      }
+    }
+  }
+  const prompt = ctx.prompt as string | undefined;
+  if (typeof prompt === 'string') return prompt;
+  return '';
+}
+
+/** Get plugin config from OpenClaw config. Assumes plugins.entries['monisave-thinking'].config */
+function getPluginConfig(api: { config?: Record<string, unknown> }): MonisavePluginConfig | undefined {
+  const entries = (api.config as Record<string, unknown>)?.plugins as Record<string, { config?: MonisavePluginConfig }> | undefined;
+  const entry = entries?.['monisave-thinking'];
+  return entry?.config;
+}
+
+/** Format savings for /savings command (with currency symbol) */
+function formatSavings(stats: SessionStats, lang: 'zh' | 'en'): string {
+  if (stats.request_count === 0) return lang === 'zh' ? strings.no_data.zh : strings.no_data.en;
+  const money = lang === 'zh' ? `¥${stats.saved_usd.toFixed(2)}` : `$${stats.saved_usd.toFixed(2)}`;
+  return lang === 'zh'
+    ? strings.savings_message.zh(stats.saved_tokens, money)
+    : strings.savings_message.en(stats.saved_tokens, money);
+}
+
+export default function register(api: {
+  registerHook: (name: string, handler: (ctx: Record<string, unknown>) => Promise<{ modelOverride?: string }> | { modelOverride?: string }) => void;
+  registerCommand: (cmd: { name: string; description: string; handler: (ctx: Record<string, unknown>) => { text: string } | Promise<{ text: string }> }) => void;
+  registerGatewayMethod?: (name: string, handler: (arg: { respond: (ok: boolean, data: unknown) => void }) => void) => void;
+  config?: Record<string, unknown>;
+  logger?: { info: (msg: string) => void };
+}) {
+  const pluginConfig = getPluginConfig(api);
+  const envLang = typeof process !== 'undefined' && process.env
+    ? (process.env.LANG ?? process.env.OPENCLAW_LANG)
+    : undefined;
+  const lang = getLanguage(pluginConfig, envLang);
+
+  api.registerHook('before_prompt_build', (ctx) => {
+    try {
+      const lastUserMsg = extractLastUserMessage(ctx);
+      const messageCount = typeof (ctx as Record<string, unknown>).messageCount === 'number'
+        ? (ctx as Record<string, unknown>).messageCount as number
+        : undefined;
+      const scene = (ctx as Record<string, unknown>).scene as string | undefined;
+      const tier = evaluate(lastUserMsg, {
+        scene: scene === 'agent' ? 'agent' : undefined,
+        messageCount,
+      }) as Tier;
+      const modelId = getModelIdForTier(tier, pluginConfig);
+      lastTier = tier;
+      lastModelId = modelId;
+      return { modelOverride: modelId };
+    } catch {
+      return {};
+    }
+  });
+
+  api.registerCommand({
+    name: 'savings',
+    description: lang === 'zh' ? strings.command_description.zh : strings.command_description.en,
+    handler: () => ({ text: formatSavings(sessionStats, lang) }),
+  });
+
+  if (api.registerGatewayMethod) {
+    api.registerGatewayMethod('monisave.stats', ({ respond }) => {
+      respond(true, { ...sessionStats });
+    });
+  }
+
+  /** Call from llm_output or similar when OpenClaw provides usage. Uses last tier/model from before_prompt_build. */
+  function recordUsage(usage: Usage): void {
+    const effort = getEffort(lastTier);
+    const result = computeSavings(usage, effort, lastModelId);
+    if (!result.hasData) return;
+    sessionStats.saved_tokens += result.saved_tokens;
+    sessionStats.saved_usd += result.saved_usd_estimate;
+    sessionStats.request_count += 1;
+  }
+
+  return { recordUsage, getSessionStats: () => sessionStats };
+}

@@ -1,0 +1,23 @@
+{
+  "id": "monisave-thinking",
+  "name": "MoniSave Thinking",
+  "version": "0.1.0",
+  "description": "Thinking token optimization: heuristic difficulty → effort (low/medium/high), /savings and monisave.stats RPC",
+  "configSchema": {
+    "tierToModelId": {
+      "type": "object",
+      "description": "Tier to OpenClaw model id. Keys: simple, medium, complex.",
+      "default": {
+        "simple": "anthropic/claude-sonnet-4-6-low",
+        "medium": "anthropic/claude-sonnet-4-6-medium",
+        "complex": "anthropic/claude-sonnet-4-6-high"
+      }
+    },
+    "language": {
+      "type": "string",
+      "enum": ["zh", "en"],
+      "description": "Language for /savings output",
+      "default": "en"
+    }
+  }
+}

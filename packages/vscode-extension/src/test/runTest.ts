@@ -1,0 +1,20 @@
+import * as path from 'path';
+import { runTests } from '@vscode/test-electron';
+
+async function main() {
+  try {
+    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+    const extensionTestsPath = path.resolve(__dirname, './suite');
+
+    // Pass launch arguments to disable automatic updates and use a fresh user-data-dir
+    const launchArgs = ['--disable-updates', '--user-data-dir', path.resolve(__dirname, '../../.vscode-test-user-data')];
+
+    await runTests({ extensionDevelopmentPath, extensionTestsPath, launchArgs });
+  } catch (err) {
+    console.error('Failed to run tests');
+    console.error(err);
+    process.exit(1);
+  }
+}
+
+main();

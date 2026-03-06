@@ -1,0 +1,88 @@
+{
+  "name": "monisave",
+  "displayName": "MoniSave",
+  "version": "0.1.0",
+  "description": "Thinking token optimization: heuristic effort + savings in status bar",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:monisave.manage",
+    "onCommand:monisave.showSavings",
+    "onCommand:monisave.useFullEffortOnce",
+    "onCommand:monisave.selectEffortMode"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "MoniSave",
+      "properties": {
+        "monisave.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for Claude (with extended thinking)"
+        },
+        "monisave.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable heuristic effort; when off, always use high effort"
+        },
+        "monisave.effortMode": {
+          "type": "string",
+          "enum": ["auto", "low", "medium", "high", "max"],
+          "default": "auto",
+          "description": "Manual effort mode: auto uses heuristics; max is downgraded on unsupported models"
+        },
+        "monisave.currency": {
+          "type": "string",
+          "enum": ["usd", "cny"],
+          "default": "usd",
+          "description": "Currency for savings display"
+        },
+        "monisave.showDifficulty": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show current difficulty tier (simple/medium/complex) in status bar"
+        },
+        "monisave.language": {
+          "type": "string",
+          "enum": ["en", "zh"],
+          "default": "en",
+          "description": "UI language"
+        }
+      }
+    },
+    "languageModelChatProviders": [
+      {
+        "vendor": "monisave",
+        "displayName": "MoniSave (Claude + thinking)",
+        "managementCommand": "monisave.manage"
+      }
+    ],
+    "commands": [
+      { "command": "monisave.manage", "title": "MoniSave: Manage API Key" },
+      { "command": "monisave.showSavings", "title": "MoniSave: Show savings" },
+      { "command": "monisave.useFullEffortOnce", "title": "MoniSave: Use full effort for next message" },
+      { "command": "monisave.selectEffortMode", "title": "MoniSave: Select effort mode" }
+    ]
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "npm run build && node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@monisave/heuristic-core": "*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0",
+    "mocha": "^10.2.0",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "@types/chai": "^4.3.0",
+    "@vscode/test-electron": "^2.0.0",
+    "glob": "^10.3.3"
+  }
+}
