@@ -1,0 +1,6 @@
+{
+  "terminal.integrated.inheritEnv": true,
+  "terminal.integrated.env.windows": {
+    "PATH": "${env:PATH};C:\\Program Files\\nodejs;C:\\Users\\DLGA\\AppData\\Roaming\\npm"
+  }
+}

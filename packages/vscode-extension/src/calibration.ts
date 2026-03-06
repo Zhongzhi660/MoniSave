@@ -4,7 +4,7 @@
  */
 
 import type { Memento } from 'vscode';
-import type { Tier } from '@monisave/heuristic-core';
+import type { Tier } from './heuristicCore.js';
 
 const REQUEST_COUNT_KEY = 'monisave.requestCount';
 const BASELINE_SAMPLES_KEY = 'monisave.baselineSamples';

@@ -1,0 +1,18 @@
+# Source and configs not needed in packaged extension
+src/**
+tsconfig.json
+.vscode/**
+
+# Tests and test runtime artifacts
+out/test/**
+.vscode-test/**
+.vscode-test-user-data/**
+
+# Workspace and local artifacts
+node_modules/.cache/**
+coverage/**
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

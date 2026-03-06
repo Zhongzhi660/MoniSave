@@ -3,7 +3,7 @@
  * All comments in English per plan.
  */
 
-import { evaluate, getEffort, computeSavings, type Tier, type Usage } from '@monisave/heuristic-core';
+import { evaluate, getEffort, computeSavings, type Tier, type Usage } from './heuristicCore.js';
 import { getModelIdForTier, getModelIdForEffort, getLanguage, getInitialEffortMode, type MonisavePluginConfig, type EffortMode } from './config.js';
 import { strings } from './strings.js';
 

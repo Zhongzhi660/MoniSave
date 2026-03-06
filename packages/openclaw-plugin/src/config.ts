@@ -2,7 +2,7 @@
  * Read tier->modelId mapping from plugin config. Defaults match plan YAML.
  */
 
-import type { Tier } from '@monisave/heuristic-core';
+import type { Tier } from './heuristicCore.js';
 
 export type EffortMode = 'auto' | 'low' | 'medium' | 'high' | 'max';
 

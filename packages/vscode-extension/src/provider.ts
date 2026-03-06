@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { evaluate, getEffort, computeSavings, getThinkingPricePerM, type Tier, type Effort, type Usage } from '@monisave/heuristic-core';
+import { evaluate, getEffort, computeSavings, getThinkingPricePerM, type Tier, type Effort, type Usage } from './heuristicCore.js';
 import { getConfig } from './config.js';
 import { getAndClearFullEffortOnce } from './fullEffortOnce.js';
 import { updateSessionSavings, setLastTier, setCalibrating } from './statusBar.js';
