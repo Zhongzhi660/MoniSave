@@ -126,7 +126,7 @@ export default function register(api: {
   });
 
   api.registerCommand({
-    name: 'monisave-mode',
+    name: 'monisave_mode',
     description: lang === 'zh' ? strings.mode_command_description.zh : strings.mode_command_description.en,
     handler: (ctx) => {
       const raw = parseModeArg(ctx);
