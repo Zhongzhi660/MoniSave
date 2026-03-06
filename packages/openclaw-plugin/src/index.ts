@@ -53,31 +53,6 @@ function formatSavings(stats: SessionStats, lang: 'zh' | 'en'): string {
     : strings.savings_message.en(stats.saved_tokens, money);
 }
 
-function parseModeArg(ctx: Record<string, unknown>): string {
-  const candidates: unknown[] = [
-    (ctx as { args?: unknown }).args,
-    (ctx as { commandArgs?: unknown }).commandArgs,
-    (ctx as { text?: unknown }).text,
-    (ctx as { message?: unknown }).message,
-    (ctx as { input?: unknown }).input,
-  ];
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) {
-      return c.trim().split(/\s+/)[0] ?? '';
-    }
-    if (Array.isArray(c) && c.length > 0) {
-      const first = c[0];
-      if (typeof first === 'string' && first.trim()) return first.trim();
-    }
-  }
-  return '';
-}
-
-function normalizeMode(raw: string): EffortMode | undefined {
-  const v = raw.toLowerCase();
-  if (v === 'auto' || v === 'low' || v === 'medium' || v === 'high' || v === 'max') return v;
-  return undefined;
-}
 
 export default function register(api: {
   registerHook: (name: string, handler: (ctx: Record<string, unknown>) => Promise<{ modelOverride?: string }> | { modelOverride?: string }) => void;
@@ -127,25 +102,33 @@ export default function register(api: {
 
   api.registerCommand({
     name: 'monisave_mode',
-    description: lang === 'zh' ? strings.mode_command_description.zh : strings.mode_command_description.en,
-    handler: (ctx) => {
-      const raw = parseModeArg(ctx);
-      if (!raw) {
-        return { text: lang === 'zh' ? strings.mode_current.zh(currentMode) : strings.mode_current.en(currentMode) };
-      }
-      const mode = normalizeMode(raw);
-      if (!mode) {
-        return { text: lang === 'zh' ? strings.mode_usage.zh : strings.mode_usage.en };
-      }
-      currentMode = mode;
-      const base = lang === 'zh' ? strings.mode_set.zh(currentMode) : strings.mode_set.en(currentMode);
-      if (mode === 'max' && !pluginConfig?.effortToModelId?.max) {
-        const hint = lang === 'zh' ? strings.mode_max_hint.zh : strings.mode_max_hint.en;
-        return { text: `${base}\n${hint}` };
-      }
-      return { text: base };
-    },
+    description: lang === 'zh' ? '查看当前 MoniSave 档位' : 'View current MoniSave mode',
+    handler: () => ({ text: lang === 'zh' ? strings.mode_current.zh(currentMode) : strings.mode_current.en(currentMode) }),
   });
+
+  const modes: Array<{ cmd: string; mode: EffortMode; desc: { zh: string; en: string } }> = [
+    { cmd: 'monisave_auto', mode: 'auto', desc: { zh: '切换为自动档位', en: 'Switch to auto mode' } },
+    { cmd: 'monisave_low', mode: 'low', desc: { zh: '切换为 low 档位', en: 'Switch to low mode' } },
+    { cmd: 'monisave_medium', mode: 'medium', desc: { zh: '切换为 medium 档位', en: 'Switch to medium mode' } },
+    { cmd: 'monisave_high', mode: 'high', desc: { zh: '切换为 high 档位', en: 'Switch to high mode' } },
+    { cmd: 'monisave_max', mode: 'max', desc: { zh: '切换为 max 档位', en: 'Switch to max mode' } },
+  ];
+
+  for (const { cmd, mode, desc } of modes) {
+    api.registerCommand({
+      name: cmd,
+      description: lang === 'zh' ? desc.zh : desc.en,
+      handler: () => {
+        currentMode = mode;
+        const base = lang === 'zh' ? strings.mode_set.zh(currentMode) : strings.mode_set.en(currentMode);
+        if (mode === 'max' && !pluginConfig?.effortToModelId?.max) {
+          const hint = lang === 'zh' ? strings.mode_max_hint.zh : strings.mode_max_hint.en;
+          return { text: `${base}\n${hint}` };
+        }
+        return { text: base };
+      },
+    });
+  }
 
   if (api.registerGatewayMethod) {
     api.registerGatewayMethod('monisave.stats', ({ respond }) => {

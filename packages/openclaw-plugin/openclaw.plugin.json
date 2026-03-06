@@ -1,5 +1,5 @@
 {
-  "id": "monisave-thinking",
+  "id": "openclaw-plugin",
   "name": "MoniSave Thinking",
   "version": "0.1.0",
   "description": "Thinking token optimization: heuristic difficulty → effort (low/medium/high), /savings and monisave.stats RPC",
