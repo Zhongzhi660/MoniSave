@@ -67,4 +67,4 @@ Thinking token optimization for **VS Code** and **OpenClaw**: choose effort (low
 
 ## License
 
-MIT.
+Apache-2.0.
