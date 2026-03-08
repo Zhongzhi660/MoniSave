@@ -130,6 +130,25 @@ npm run build   # from repo root
 
 ---
 
+## Contributing
+
+MoniSave is an **open framework** designed to be extended and improved. The current implementation provides a working foundation — and there's a lot of room to make it better.
+
+**Good places to start:**
+
+- **Difficulty auto-detection** — the heuristic classifier is the core unsolved problem. Claude's effort/thinking behavior is well-documented: see [Adaptive thinking](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking) and [Effort parameter](https://platform.claude.com/docs/en/build-with-claude/effort). A smarter prompt classifier could drive much better automatic savings.
+- **Savings accuracy** — the current token-saving estimate is approximate. Better baselines and per-model calibration would make the numbers more trustworthy.
+- **Knowledge card quality** — the auto-extraction of `rootCause`, `solutionSteps`, and `commands` from raw Q&A text is rule-based and improvable.
+- **OpenClaw feature parity** — knowledge cards and language switching are VS Code-only today.
+
+If you find a bug, have a feature idea, or want to improve any part of the stack — PRs and issues are welcome.
+
+**Claude effort API reference** (useful for anyone working on the effort/thinking layer):
+- [Adaptive thinking](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking) — `thinking: {type: "adaptive"}` with `effort` parameter (recommended for Sonnet 4.6 / Opus 4.6)
+- [Effort parameter](https://platform.claude.com/docs/en/build-with-claude/effort) — controls token spend across text, tool calls, and thinking: `low` / `medium` / `high` / `max`
+
+---
+
 ## License
 
 Apache-2.0

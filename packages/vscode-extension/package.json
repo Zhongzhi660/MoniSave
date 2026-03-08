@@ -1,7 +1,7 @@
 {
   "name": "monisave",
   "displayName": "MoniSave",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "MoniSave",
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "onCommand:monisave.listKnowledgeCards"
   ],
   "main": "./out/extension.js",
+  "icon": "logo.png",
   "contributes": {
     "configuration": {
       "title": "MoniSave",

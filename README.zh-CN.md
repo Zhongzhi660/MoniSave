@@ -130,6 +130,25 @@ npm run build   # 在仓库根目录执行
 
 ---
 
+## 参与贡献
+
+MoniSave 是一个**开放框架**，欢迎任何人扩展和改进。当前实现提供了一个可运行的基础 — 还有很多地方值得打磨。
+
+**适合入手的方向：**
+
+- **难度自动感知** — 启发式分类器是核心未解问题。Claude 的 effort/thinking 行为已有完整文档：参见 [Adaptive thinking](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking) 与 [Effort 参数](https://platform.claude.com/docs/en/build-with-claude/effort)。更智能的 prompt 分类器可以大幅提升自动节省效果。
+- **节省数字准确性** — 当前 token 节省估算较为粗略。更好的 baseline 与按模型校准可以让数据更可信。
+- **知识卡片质量** — 从问答原文自动提取 `rootCause`、`solutionSteps`、`commands` 目前基于规则，有很大提升空间。
+- **OpenClaw 功能对齐** — 知识卡片与语言切换目前仅在 VS Code 端可用。
+
+发现 bug、有功能想法、或想改进任何部分 — 欢迎提 PR 和 Issue。
+
+**Claude effort API 参考**（适合参与 effort/thinking 层开发）：
+- [Adaptive thinking](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking) — `thinking: {type: "adaptive"}` 配合 `effort` 参数（推荐用于 Sonnet 4.6 / Opus 4.6）
+- [Effort 参数](https://platform.claude.com/docs/en/build-with-claude/effort) — 控制文本、工具调用与 thinking 的 token 消耗：`low` / `medium` / `high` / `max`
+
+---
+
 ## 许可证
 
 Apache-2.0
