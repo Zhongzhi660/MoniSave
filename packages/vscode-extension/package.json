@@ -10,7 +10,13 @@
     "onCommand:monisave.manage",
     "onCommand:monisave.showSavings",
     "onCommand:monisave.useFullEffortOnce",
-    "onCommand:monisave.selectEffortMode"
+    "onCommand:monisave.selectEffortMode",
+    "onCommand:monisave.switchLanguage",
+    "onCommand:monisave.saveCurrentQaAsKnowledge",
+    "onCommand:monisave.searchTeamKnowledge",
+    "onCommand:monisave.markAnswerUseful",
+    "onCommand:monisave.markAnswerNotUseful",
+    "onCommand:monisave.listKnowledgeCards"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,14 +50,80 @@
           "default": false,
           "description": "Show current difficulty tier (simple/medium/complex) in status bar"
         },
+        "monisave.showEffortOnSend": {
+          "type": "boolean",
+          "default": true,
+          "description": "When sending a message, show which effort (low/medium/high) is used for that message. Turn off to reduce status bar messages. / 发送消息时显示本条使用的档位，便于验证切换是否生效"
+        },
         "monisave.language": {
           "type": "string",
           "enum": ["en", "zh"],
+          "enumDescriptions": ["English", "中文"],
           "default": "en",
-          "description": "UI language"
+          "description": "UI language / 界面语言"
+        },
+        "monisave.knowledge.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable team knowledge retrieval and reuse"
+        },
+        "monisave.knowledge.topK": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Maximum number of knowledge cards to retrieve"
+        },
+        "monisave.knowledge.minScore": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum retrieval score for injecting knowledge context"
+        },
+        "monisave.knowledge.summaryMode": {
+          "type": "string",
+          "enum": ["off", "cheap", "smart"],
+          "default": "off",
+          "description": "Knowledge summary mode; off disables model-based summarization"
+        },
+        "monisave.knowledge.repoPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional folder path for shared knowledge JSONL files"
+        },
+        "monisave.knowledge.feedbackWeight": {
+          "type": "number",
+          "default": 0.25,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Weight of explicit useful/not useful feedback in ranking"
+        },
+        "monisave.knowledge.feedbackMinSamples": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Minimum feedback samples before applying full feedback weight"
         }
       }
     },
+    "chatParticipants": [
+      {
+        "id": "monisave.participant",
+        "name": "monisave",
+        "fullName": "MoniSave",
+        "description": "Save/search knowledge, mark answer useful or not",
+        "isSticky": false,
+        "commands": [
+          { "name": "save", "description": "Save the last Q&A as a knowledge card" },
+          { "name": "useful", "description": "Mark the last answer as useful" },
+          { "name": "notuseful", "description": "Mark the last answer as not useful" },
+          { "name": "search", "description": "Search team knowledge (add keywords after /search)" },
+          { "name": "list", "description": "List all knowledge cards" }
+        ]
+      }
+    ],
     "languageModelChatProviders": [
       {
         "vendor": "monisave",
@@ -63,7 +135,16 @@
       { "command": "monisave.manage", "title": "MoniSave: Manage API Key" },
       { "command": "monisave.showSavings", "title": "MoniSave: Show savings" },
       { "command": "monisave.useFullEffortOnce", "title": "MoniSave: Use full effort for next message" },
-      { "command": "monisave.selectEffortMode", "title": "MoniSave: Select effort mode" }
+      { "command": "monisave.selectEffortMode", "title": "MoniSave: Select effort mode" },
+      { "command": "monisave.switchLanguage", "title": "MoniSave: Switch UI language (中文 / English)" },
+      { "command": "monisave.saveCurrentQaAsKnowledge", "title": "MoniSave: Save current Q&A as knowledge" },
+      { "command": "monisave.searchTeamKnowledge", "title": "MoniSave: Search team knowledge" },
+      { "command": "monisave.markAnswerUseful", "title": "MoniSave: Mark answer useful" },
+      { "command": "monisave.markAnswerNotUseful", "title": "MoniSave: Mark answer not useful" },
+      { "command": "monisave.listKnowledgeCards", "title": "MoniSave: List knowledge cards" }
+    ],
+    "keybindings": [
+      { "command": "monisave.selectEffortMode", "key": "ctrl+shift+e", "mac": "cmd+shift+e", "when": "editorTextFocus" }
     ]
   },
   "scripts": {

@@ -49,3 +49,11 @@ export function getLanguage(config?: MonisavePluginConfig, envLang?: string): 'z
   if (envLang?.toLowerCase().startsWith('zh')) return 'zh';
   return 'en';
 }
+
+/**
+ * Resolve model id for auto mode. Default: Claude default behavior (complex/high tier).
+ * Replace or extend to plug in heuristic or ML-based auto selection later.
+ */
+export function getModelIdForAuto(_ctx: Record<string, unknown>, config?: MonisavePluginConfig): string {
+  return getModelIdForTier('complex', config);
+}

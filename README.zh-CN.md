@@ -35,6 +35,20 @@
 
 **验证**：发一条短句（如「改个 typo」）和一条长/复杂消息，状态栏应显示节省；关闭 `monisave.enabled` 后，所有请求均为 high effort。
 
+#### 如何验证档位切换是否生效
+
+1. **状态栏**  
+   状态栏会显示当前选择的档位，例如 `(low)`、`(high)`。切换档位后，该括号内的值会立即更新。
+
+2. **发送时的提示（推荐）**  
+   默认开启「发送时显示本条使用的档位」：每次发送一条消息后，状态栏会短暂显示 **「MoniSave: 本条使用 low」**（或 medium/high），即该条请求真实使用的档位。  
+   若未看到提示，可在设置中确认 `monisave.showEffortOnSend` 为 `true`。
+
+3. **开发者控制台**  
+   打开 **帮助 → 切换开发人员工具**，在 Console 中筛选 `MoniSave`。每次请求会输出类似：  
+   `[MoniSave] tier: simple effort: low count: ...`  
+   可据此确认当前请求的 effort 与 tier。
+
 ---
 
 ### OpenClaw

@@ -3,7 +3,8 @@
  */
 
 import * as vscode from 'vscode';
-import { evaluate, getEffort, computeSavings, getThinkingPricePerM, type Tier, type Effort, type Usage } from './heuristicCore.js';
+import { computeSavings, getThinkingPricePerM, type Tier, type Effort, type Usage } from './heuristicCore.js';
+import { getEffortForAuto } from './autoStrategy.js';
 import { getConfig } from './config.js';
 import { getAndClearFullEffortOnce } from './fullEffortOnce.js';
 import { updateSessionSavings, setLastTier, setCalibrating } from './statusBar.js';
@@ -15,6 +16,7 @@ import {
   getBaselineForTier,
   CALIBRATION_WARMUP_REQUESTS,
 } from './calibration.js';
+import { retrieveKnowledgeContext, rememberLastTurn } from './knowledge/index.js';
 
 /** Anthropic model ID used for all requests. Visible in Chat model picker. */
 export const MODEL_ID = 'claude-sonnet-4-6';
@@ -106,6 +108,7 @@ export class MonisaveChatProvider implements vscode.LanguageModelChatProvider {
   ): Promise<void> {
     this.onFirstRequest?.();
     const cfg = getConfig();
+    const lastUser = extractLastUserMessage(messages);
     let effort: Effort = DEFAULT_EFFORT;
     let tier: Tier = 'medium';
     const selectedMode = cfg.effortMode;
@@ -130,20 +133,50 @@ export class MonisaveChatProvider implements vscode.LanguageModelChatProvider {
         tier = effort === 'low' ? 'simple' : effort === 'medium' ? 'medium' : 'complex';
       }
     } else {
-      try {
-        const lastUser = extractLastUserMessage(messages);
-        console.log('[MoniSave] lastUser (len=' + lastUser.length + '):', lastUser.slice(0, 300));
-        tier = evaluate(lastUser, { scene: 'chat', messageCount: messages.length });
-        effort = getEffort(tier);
-        console.log('[MoniSave] evaluate result → tier:', tier, 'effort:', effort, 'msgCount:', messages.length);
-      } catch {
-        effort = 'medium';
-        tier = 'medium';
-      }
+      const autoResult = getEffortForAuto({
+        lastUserMessage: lastUser,
+        messageCount: messages.length,
+        scene: 'chat',
+      });
+      effort = autoResult.effort;
+      tier = autoResult.tier;
+      console.log('[MoniSave] auto mode → tier:', tier, 'effort:', effort);
     }
     setLastTier(tier);
 
+    if (cfg.showEffortOnSend) {
+      const lang = getLang(cfg.language, undefined);
+      const msg = lang === 'zh' ? `MoniSave: 本条使用 ${effort}` : `MoniSave: This message uses ${effort}`;
+      void vscode.window.setStatusBarMessage(msg, 4000);
+    }
+
     const anthropicMessages = vscodeMessagesToAnthropic(messages);
+    let matchedCardIds: string[] = [];
+    if (cfg.knowledgeEnabled && lastUser.trim().length > 0) {
+      try {
+        const knowledge = await retrieveKnowledgeContext(lastUser, 'chat', {
+          enabled: cfg.knowledgeEnabled,
+          topK: cfg.knowledgeTopK,
+          minScore: cfg.knowledgeMinScore,
+          repoPath: cfg.knowledgeRepoPath,
+          feedbackWeight: cfg.knowledgeFeedbackWeight,
+          feedbackMinSamples: cfg.knowledgeFeedbackMinSamples,
+        });
+        if (knowledge.contextText) {
+          for (let i = anthropicMessages.length - 1; i >= 0; i--) {
+            const m = anthropicMessages[i];
+            if (m.role === 'user') {
+              m.content = `${knowledge.contextText}\n\nCurrent question:\n${m.content}`;
+              break;
+            }
+          }
+          matchedCardIds = knowledge.matchedCardIds;
+          console.log('[MoniSave][Knowledge] matched cards:', matchedCardIds.join(','));
+        }
+      } catch (err) {
+        console.warn('[MoniSave][Knowledge] retrieval failed:', err);
+      }
+    }
 
     const runStream = async (params: { effort: Effort; tier: Tier }) => {
       const apiKey = getConfig().apiKey || process.env.ANTHROPIC_API_KEY;
@@ -179,6 +212,7 @@ export class MonisaveChatProvider implements vscode.LanguageModelChatProvider {
       let buf = '';
       let usage: Usage = {};
       let thinkingText = '';
+      let assistantText = '';
       let hasThinkingBlock = false;
       while (true) {
         const { value, done } = await reader.read();
@@ -214,6 +248,7 @@ export class MonisaveChatProvider implements vscode.LanguageModelChatProvider {
               thinkingText += event.delta.thinking;
             }
             if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && event.delta.text) {
+              assistantText += event.delta.text;
               progress.report(new vscode.LanguageModelTextPart(event.delta.text));
             }
           } catch {
@@ -254,6 +289,11 @@ export class MonisaveChatProvider implements vscode.LanguageModelChatProvider {
         updateSessionSavings(0, 0, tier);
         console.log('[MoniSave] tier:', params.tier, 'effort:', params.effort, 'count:', count, '(calibrating)', 'input_tokens:', usage.input_tokens, 'output:', usage.output_tokens, 'thinking:', estimatedThinkingTokens);
       }
+      rememberLastTurn({
+        question: lastUser,
+        answer: assistantText,
+        matchedCardIds,
+      });
     };
 
     await runStream({ effort, tier });

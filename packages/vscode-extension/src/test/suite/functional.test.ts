@@ -1,12 +1,14 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 
-import { createStatusBar, disposeStatusBar, getSessionStats, updateSessionSavings, refreshStatusBar } from '../../statusBar.js';
+import { createStatusBar, disposeStatusBar, getSessionStats, updateSessionSavings, refreshStatusBar, setCalibrating } from '../../statusBar.js';
 import { setFullEffortOnce, getAndClearFullEffortOnce } from '../../fullEffortOnce.js';
 import { MonisaveChatProvider } from '../../provider.js';
 
 describe('Functional Tests', () => {
   it('status bar default and updates', () => {
+    // Ensure test uses post-calibration behavior for accumulation assertions.
+    setCalibrating(null);
     const item = createStatusBar();
     // default should show 'MoniSave'
     assert.ok(item.text.includes('MoniSave'));

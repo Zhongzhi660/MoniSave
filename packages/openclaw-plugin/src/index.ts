@@ -3,8 +3,8 @@
  * All comments in English per plan.
  */
 
-import { evaluate, getEffort, computeSavings, type Tier, type Usage } from './heuristicCore.js';
-import { getModelIdForTier, getModelIdForEffort, getLanguage, getInitialEffortMode, type MonisavePluginConfig, type EffortMode } from './config.js';
+import { getEffort, computeSavings, type Tier, type Usage } from './heuristicCore.js';
+import { getModelIdForEffort, getModelIdForAuto, getLanguage, getInitialEffortMode, type MonisavePluginConfig, type EffortMode } from './config.js';
 import { strings } from './strings.js';
 
 /** In-memory session stats: saved tokens, saved USD, request count */
@@ -18,24 +18,6 @@ let sessionStats: SessionStats = { saved_tokens: 0, saved_usd: 0, request_count:
 let lastTier: Tier = 'medium';
 let lastModelId: string = '';
 let currentMode: EffortMode = 'auto';
-
-/** Extract last user message text from hook context. Handles common OpenClaw shapes. */
-function extractLastUserMessage(ctx: Record<string, unknown>): string {
-  const messages = ctx.messages as Array<{ role?: string; content?: string; text?: string }> | undefined;
-  if (Array.isArray(messages)) {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
-      const role = (m?.role ?? '').toLowerCase();
-      if (role === 'user' || role === 'human') {
-        const content = typeof m?.content === 'string' ? m.content : m?.text ?? '';
-        return content;
-      }
-    }
-  }
-  const prompt = ctx.prompt as string | undefined;
-  if (typeof prompt === 'string') return prompt;
-  return '';
-}
 
 /** Get plugin config from OpenClaw config. Assumes plugins.entries['monisave-thinking'].config */
 function getPluginConfig(api: { config?: Record<string, unknown> }): MonisavePluginConfig | undefined {
@@ -72,17 +54,8 @@ export default function register(api: {
     try {
       let modelId: string;
       if (currentMode === 'auto') {
-        const lastUserMsg = extractLastUserMessage(ctx);
-        const messageCount = typeof (ctx as Record<string, unknown>).messageCount === 'number'
-          ? (ctx as Record<string, unknown>).messageCount as number
-          : undefined;
-        const scene = (ctx as Record<string, unknown>).scene as string | undefined;
-        const tier = evaluate(lastUserMsg, {
-          scene: scene === 'agent' ? 'agent' : undefined,
-          messageCount,
-        }) as Tier;
-        lastTier = tier;
-        modelId = getModelIdForTier(tier, pluginConfig);
+        modelId = getModelIdForAuto(ctx as Record<string, unknown>, pluginConfig);
+        lastTier = 'complex';
       } else {
         lastTier = currentMode === 'low' ? 'simple' : currentMode === 'medium' ? 'medium' : 'complex';
         modelId = getModelIdForEffort(currentMode, pluginConfig);

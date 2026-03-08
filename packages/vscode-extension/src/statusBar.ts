@@ -49,10 +49,12 @@ export function refreshStatusBar(): void {
   const lang = getLang(cfg.language, process.env.VSCODE_NLS_CONFIG ? undefined : undefined);
   const money = formatMoney(sessionSavedUsd, cfg.currency);
   let text: string;
+  const modeLabel = `(${cfg.effortMode})`;
   if (calibratingCount !== null) {
     text = lang === 'zh'
       ? strings.statusBar_calibrating.zh(calibratingCount, CALIBRATION_WARMUP)
       : strings.statusBar_calibrating.en(calibratingCount, CALIBRATION_WARMUP);
+    text = `${text} ${modeLabel}`;
     statusBarItem.tooltip = lang === 'zh' ? '前 20 次请求用于校准，之后将显示节省' : 'First 20 requests calibrate; savings shown after';
   } else if (sessionSavedTokens > 0) {
     text = lang === 'zh' ? strings.statusBar_savings.zh(sessionSavedTokens, money) : strings.statusBar_savings.en(sessionSavedTokens, money);
@@ -60,11 +62,14 @@ export function refreshStatusBar(): void {
       const tierLabel = lang === 'zh' ? strings.statusBar_tier.zh(lastTier) : strings.statusBar_tier.en(lastTier);
       text = `${tierLabel} ${text}`;
     }
+    text = `${text} ${modeLabel}`;
     statusBarItem.tooltip = lang === 'zh' ? '本会话节省的 thinking tokens 与预估金额' : 'Session saved thinking tokens and estimated cost';
   } else {
-    text = lang === 'zh' ? strings.statusBar_noData.zh : strings.statusBar_noData.en;
+    text = (lang === 'zh' ? strings.statusBar_noData.zh : strings.statusBar_noData.en) + ` ${modeLabel}`;
     statusBarItem.tooltip = lang === 'zh' ? '本会话节省的 thinking tokens 与预估金额' : 'Session saved thinking tokens and estimated cost';
   }
+  const clickHint = lang === 'zh' ? ' · 点击切换档位' : ' · Click to change effort';
+  statusBarItem.tooltip = (statusBarItem.tooltip ?? '') + clickHint;
   statusBarItem.text = text;
   statusBarItem.show();
 }
@@ -72,6 +77,7 @@ export function refreshStatusBar(): void {
 export function createStatusBar(): vscode.StatusBarItem {
   if (statusBarItem) return statusBarItem;
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBarItem.command = 'monisave.selectEffortMode';
   refreshStatusBar();
   return statusBarItem;
 }

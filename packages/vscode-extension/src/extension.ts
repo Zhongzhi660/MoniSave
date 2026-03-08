@@ -10,8 +10,28 @@ import { getConfig, type EffortMode } from './config.js';
 import { setFullEffortOnce } from './fullEffortOnce.js';
 import { strings, getLang } from './strings.js';
 import { initCalibration, getRequestCount, CALIBRATION_WARMUP_REQUESTS } from './calibration.js';
+import {
+  initKnowledgeService,
+  listAllCards,
+  markLastTurnFeedback,
+  saveCurrentTurnAsKnowledge,
+  searchKnowledge,
+} from './knowledge/index.js';
+import { registerChatParticipant } from './chatParticipant.js';
 
 const FIRST_TIME_KEY = 'monisave.firstTimeToastShown';
+
+function getKnowledgeRuntimeConfig() {
+  const cfg = getConfig();
+  return {
+    enabled: cfg.knowledgeEnabled,
+    topK: cfg.knowledgeTopK,
+    minScore: cfg.knowledgeMinScore,
+    repoPath: cfg.knowledgeRepoPath,
+    feedbackWeight: cfg.knowledgeFeedbackWeight,
+    feedbackMinSamples: cfg.knowledgeFeedbackMinSamples,
+  };
+}
 
 async function promptAndSetApiKey(): Promise<void> {
   const cfg = getConfig();
@@ -55,7 +75,29 @@ async function promptAndSetEffortMode(): Promise<void> {
   vscode.window.showInformationMessage(msg);
 }
 
+async function promptAndSetLanguage(): Promise<void> {
+  const cfg = getConfig();
+  const lang = getLang(cfg.language, undefined);
+  const picked = await vscode.window.showQuickPick(
+    [
+      { label: 'zh', description: '中文', detail: lang === 'zh' ? '当前' : undefined },
+      { label: 'en', description: 'English', detail: lang === 'en' ? 'Current' : undefined },
+    ],
+    {
+      title: lang === 'zh' ? '切换界面语言' : 'Switch UI language',
+      placeHolder: cfg.language,
+      ignoreFocusOut: true,
+    }
+  );
+  if (!picked) return;
+  const c = vscode.workspace.getConfiguration('monisave');
+  await c.update('language', picked.label as 'zh' | 'en', vscode.ConfigurationTarget.Global);
+  const msg = picked.label === 'zh' ? 'MoniSave: 界面语言已设为中文' : 'MoniSave: UI language set to English';
+  vscode.window.showInformationMessage(msg);
+}
+
 export function activate(context: vscode.ExtensionContext): void {
+  initKnowledgeService(context.globalStorageUri.fsPath);
   initCalibration(context.globalState);
   createStatusBar();
   const n = getRequestCount();
@@ -79,6 +121,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.lm.registerLanguageModelChatProvider('monisave', provider)
   );
 
+  registerChatParticipant(context);
+
   context.subscriptions.push(
     vscode.commands.registerCommand('monisave.manage', async () => {
       const cfg = getConfig();
@@ -87,6 +131,7 @@ export function activate(context: vscode.ExtensionContext): void {
         [
           { label: lang === 'zh' ? '设置 API Key' : 'Set API Key', id: 'api' },
           { label: lang === 'zh' ? '设置 Effort 档位' : 'Set Effort mode', id: 'effort' },
+          { label: lang === 'zh' ? '切换界面语言 (中文 / English)' : 'Switch UI language (中文 / English)', id: 'language' },
         ],
         {
           title: 'MoniSave',
@@ -96,6 +141,8 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!action) return;
       if (action.id === 'api') {
         await promptAndSetApiKey();
+      } else if (action.id === 'language') {
+        await promptAndSetLanguage();
       } else {
         await promptAndSetEffortMode();
       }
@@ -105,6 +152,12 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('monisave.selectEffortMode', async () => {
       await promptAndSetEffortMode();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.switchLanguage', async () => {
+      await promptAndSetLanguage();
     })
   );
 
@@ -132,6 +185,95 @@ export function activate(context: vscode.ExtensionContext): void {
           ? strings.statusBar_savings.zh(stats.saved_tokens, money)
           : strings.statusBar_savings.en(stats.saved_tokens, money);
         vscode.window.showInformationMessage(msg);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.saveCurrentQaAsKnowledge', async () => {
+      const result = await saveCurrentTurnAsKnowledge(getKnowledgeRuntimeConfig());
+      if (result.ok) {
+        vscode.window.showInformationMessage(`MoniSave: ${result.message}`);
+      } else {
+        vscode.window.showWarningMessage(`MoniSave: ${result.message}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.searchTeamKnowledge', async () => {
+      const query = await vscode.window.showInputBox({
+        title: 'MoniSave',
+        prompt: 'Search team knowledge',
+        placeHolder: 'Enter keywords',
+        ignoreFocusOut: true,
+      });
+      if (!query?.trim()) return;
+      const items = await searchKnowledge(query, getKnowledgeRuntimeConfig());
+      if (items.length === 0) {
+        vscode.window.showInformationMessage('MoniSave: No matching knowledge cards.');
+        return;
+      }
+      const picked = await vscode.window.showQuickPick(
+        items.map((it) => ({
+          label: it.title,
+          description: `${it.id} · score=${it.score.toFixed(2)}`,
+        })),
+        { title: 'MoniSave team knowledge', ignoreFocusOut: true }
+      );
+      if (picked) {
+        vscode.window.showInformationMessage(`MoniSave: ${picked.label}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.listKnowledgeCards', async () => {
+      const cfg = getConfig();
+      const lang = getLang(cfg.language, undefined);
+      const items = await listAllCards(getKnowledgeRuntimeConfig());
+      if (items.length === 0) {
+        vscode.window.showInformationMessage(
+          lang === 'zh' ? 'MoniSave: 当前没有知识卡片。' : 'MoniSave: No knowledge cards yet.'
+        );
+        return;
+      }
+      const picked = await vscode.window.showQuickPick(
+        items.map((it) => ({
+          label: it.title,
+          description: `${it.id} · ${lang === 'zh' ? '质量' : 'quality'}=${it.qualityScore.toFixed(2)}`,
+          detail: it.updatedAt ? it.updatedAt.slice(0, 19) : '',
+        })),
+        {
+          title: lang === 'zh' ? 'MoniSave 知识卡片' : 'MoniSave knowledge cards',
+          matchOnDescription: true,
+          ignoreFocusOut: true,
+        }
+      );
+      if (picked) {
+        vscode.window.showInformationMessage(`MoniSave: ${picked.label}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.markAnswerUseful', async () => {
+      const result = await markLastTurnFeedback('useful', getKnowledgeRuntimeConfig());
+      if (result.ok) {
+        vscode.window.showInformationMessage(`MoniSave: ${result.message}`);
+      } else {
+        vscode.window.showWarningMessage(`MoniSave: ${result.message}`);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('monisave.markAnswerNotUseful', async () => {
+      const result = await markLastTurnFeedback('not_useful', getKnowledgeRuntimeConfig());
+      if (result.ok) {
+        vscode.window.showInformationMessage(`MoniSave: ${result.message}`);
+      } else {
+        vscode.window.showWarningMessage(`MoniSave: ${result.message}`);
       }
     })
   );
