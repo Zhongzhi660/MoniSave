@@ -1,133 +1,107 @@
 # MoniSave
 
-> Thinking token optimization for **VS Code** and **OpenClaw** — automatically selects the right effort level (low / medium / high) by heuristic difficulty, and shows real-time token savings in the status bar.
+**Stop wasting money on thinking tokens you don't need.**
 
-- **Heuristic-only** (no training required): short/simple prompts → low effort; long/complex prompts → high effort.
-- **Shared core logic** used by both the VS Code extension and the OpenClaw plugin.
-- **Real-time savings**: session saved tokens + estimated cost (USD / CNY).
+MoniSave connects Claude's extended thinking to VS Code and OpenClaw — and lets you control exactly how much reasoning each message gets.
 
----
-
-## Table of Contents
-
-- [VS Code Extension](#vs-code-extension)
-- [OpenClaw Plugin](#openclaw-plugin)
-- [Repository Layout](#repository-layout)
-- [License](#license)
+> ⚠️ **Difficulty auto-detection is under active development and not yet available.** Manual effort switching and all other features are fully functional.
 
 ---
 
-## VS Code Extension
+## What it does
 
-### Features
+| | VS Code | OpenClaw (Telegram) |
+|--|---------|---------------------|
+| Choose effort per message | ✅ Click status bar or `Ctrl+Shift+E` | ✅ `/monisave_low`, `/monisave_high` … |
+| See real-time token savings | ✅ Status bar | ✅ `/savings` |
+| Save team knowledge | ✅ `@monisave /save` | — |
+| Switch language (中/EN) | ✅ One command | — |
 
-| Feature | Description |
+---
+
+## VS Code
+
+### 1 — Pick the model
+
+Open VS Code Chat and select **MoniSave (Claude Sonnet + thinking)**.
+
+![Select MoniSave model in VS Code Chat](figs/vscode_1.png)
+
+### 2 — Switch effort in one click
+
+Click the status bar or press **`Ctrl+Shift+E`** to open the effort picker.
+
+![Effort picker — auto / low / medium / high / max](figs/vscode_2.png)
+
+Or use the command palette (`Ctrl+Shift+P` → type **MoniSave**):
+
+![All MoniSave commands in command palette](figs/vscode_3.png)
+
+### 3 — Use @monisave for team knowledge
+
+In Chat, type `@monisave /` to see all knowledge commands:
+
+![`@monisave` sub-commands](figs/vscode_4.png)
+
+| Command | What it does |
 |---------|-------------|
-| **Auto effort selection** | Heuristic classifies each prompt as simple / medium / complex and picks low / medium / high effort automatically |
-| **Manual effort modes** | Switch between `auto` / `low` / `medium` / `high` / `max` via status bar click or `Ctrl+Shift+E` |
-| **Status bar savings** | Shows session saved tokens and estimated cost (USD or CNY) in real time |
-| **Effort-on-send hint** | Briefly shows which effort level was used for each request (e.g. `MoniSave: This message uses low`) |
-| **Full-effort once** | One-shot command to force high effort for the next message only |
-| **Team knowledge cards** | Save Q&A pairs as searchable knowledge cards; auto-inject relevant context into future prompts |
-| **@monisave chat participant** | Use `/save`, `/useful`, `/notuseful`, `/search`, `/list` directly in VS Code Chat |
-| **Chinese / English UI** | Switch language via command or settings (`monisave.language`) |
+| `/save` | Save the last Q&A as a knowledge card |
+| `/search <keywords>` | Find relevant cards |
+| `/list` | Show all cards |
+| `/useful` · `/notuseful` | Rate the last answer |
 
-### Quick Start
+### 4 — Verify it's working
 
-**1. Install**
+Open **Help → Toggle Developer Tools → Console** and filter by `MoniSave`:
 
-Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MoniSave.monisave), or load from `packages/vscode-extension` in Extension Development Host.
+![Developer console showing tier, effort, and token counts per request](figs/vscode_5.png)
 
-**2. Configure**
+Every request logs `tier · effort · input_tokens · thinking` so you can confirm the right effort level was used.
 
-- Set your Anthropic API key: run **`MoniSave: Manage API Key`** or open Settings → `monisave.apiKey`.
-- Optional settings:
+### Setup
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `monisave.effortMode` | `auto` | `auto` / `low` / `medium` / `high` / `max` |
-| `monisave.currency` | `usd` | `usd` or `cny` |
-| `monisave.language` | `en` | `en` or `zh` |
-| `monisave.showDifficulty` | `false` | Show tier label in status bar |
-| `monisave.showEffortOnSend` | `true` | Show effort used per request |
-
-**3. Use**
-
-1. Open VS Code Chat and select the model **`MoniSave (Claude Sonnet + thinking)`**.
-2. Send messages as usual — effort is chosen automatically.
-3. Check the **status bar** (bottom-right) for live savings.
-4. **Click the status bar** (or press `Ctrl+Shift+E`) to switch effort mode instantly.
-
-![Model picker — select MoniSave (Claude Sonnet + thinking)](figs/vscode_1.png)
-
-### Effort Mode Switching
-
-Three ways to switch:
-
-1. **Click the status bar** — shows current mode e.g. `MoniSave (high)`, click to open picker.
-2. **Keyboard shortcut** — `Ctrl+Shift+E` (Mac: `Cmd+Shift+E`).
-3. **Command palette** — `Ctrl+Shift+P` → `MoniSave: Select effort mode`.
-
-![Effort mode picker — auto / low / medium / high / max](figs/vscode_2.png)
-
-![Command palette — all MoniSave commands](figs/vscode_3.png)
-
-### Team Knowledge Cards (`@monisave`)
-
-In VS Code Chat, mention **`@monisave`** and use slash sub-commands:
-
-| Command | Action |
-|---------|--------|
-| `@monisave /save` | Save the last Q&A as a knowledge card |
-| `@monisave /useful` | Mark last answer as useful (boosts card ranking) |
-| `@monisave /notuseful` | Mark last answer as not useful |
-| `@monisave /search <keywords>` | Search knowledge cards by keywords |
-| `@monisave /list` | List all knowledge cards with full content |
-
-![`@monisave` sub-commands in VS Code Chat](figs/vscode_4.png)
-
-### Verifying Effort Switching Works
-
-1. **Status bar label** — shows current configured mode e.g. `(low)`. Updates immediately on switch.
-2. **Per-request hint** — status bar briefly shows `MoniSave: This message uses low` after each send.
-3. **Developer console** — Help → Toggle Developer Tools → Console, filter `MoniSave`:
-   ```
-   [MoniSave] tier: simple effort: low count: ...
-   ```
-
----
-
-## OpenClaw Plugin
-
-### Features
-
-| Feature | Description |
-|---------|-------------|
-| **Auto model routing** | Returns `modelOverride` from `before_prompt_build` based on heuristic difficulty |
-| **Tier mapping** | Maps `simple` / `medium` / `complex` tiers to your OpenClaw model IDs |
-| **Session savings** | `/savings` command shows saved tokens and estimated cost for the session |
-| **Gateway RPC** | `monisave.stats` RPC returns `saved_tokens`, `saved_usd`, `request_count` |
-| **Manual mode commands** | `monisave_mode`, `monisave_auto`, `monisave_low`, `monisave_medium`, `monisave_high`, `monisave_max` |
-
-![OpenClaw bot on Telegram — mode switching commands](figs/Openclaw.jpg)
-
-### Quick Start
-
-**1. Build & Install**
-
-```bash
-# From repo root
-npm run build
-
-# Or build plugin only
-cd packages/openclaw-plugin && npm run build
+```
+1. Install from the VS Code Marketplace (search "MoniSave")
+2. Run "MoniSave: Manage API Key" and enter your Anthropic key
+3. Select MoniSave model in Chat — done
 ```
 
-Then install/load the plugin from `packages/openclaw-plugin` per your OpenClaw documentation.
+**Key settings:**
 
-**2. Configure**
+| Setting | Default | Options |
+|---------|---------|---------|
+| `monisave.effortMode` | `auto` | auto / low / medium / high / max |
+| `monisave.currency` | `usd` | usd / cny |
+| `monisave.language` | `en` | en / zh |
+| `monisave.showEffortOnSend` | `true` | Show effort used per request |
 
-See `packages/openclaw-plugin/CONFIG.example.md`. Map tiers to your model IDs:
+---
+
+## OpenClaw
+
+MoniSave runs as a plugin inside your OpenClaw bot (Telegram or similar).
+
+### Switching effort
+
+<img src="figs/Openclaw.jpg" width="320" alt="OpenClaw bot — effort mode switching on mobile" />
+
+```
+/monisave_mode        → show current mode
+/monisave_low         → force low effort
+/monisave_medium      → force medium effort
+/monisave_high        → force high effort
+/monisave_auto        → back to auto
+/savings              → session token savings
+```
+
+### Install
+
+```bash
+npm run build   # from repo root
+# then load packages/openclaw-plugin per your OpenClaw docs
+```
+
+**Config** (`CONFIG.example.md`):
 
 ```json
 {
@@ -136,40 +110,19 @@ See `packages/openclaw-plugin/CONFIG.example.md`. Map tiers to your model IDs:
     "simple":  "your-low-effort-model-id",
     "medium":  "your-mid-effort-model-id",
     "complex": "your-high-effort-model-id"
-  },
-  "language": "en"
+  }
 }
 ```
 
-**3. Use**
-
-- Chat as usual — the plugin auto-selects model via `before_prompt_build`.
-- Run `/savings` to see session token savings.
-- Use Gateway RPC `monisave.stats` for programmatic access.
-
-### Manual Mode Commands
-
-| Command | Effect |
-|---------|--------|
-| `monisave_auto` | Switch to auto (heuristic) mode |
-| `monisave_low` | Force low effort |
-| `monisave_medium` | Force medium effort |
-| `monisave_high` | Force high effort |
-| `monisave_max` | Force max effort (falls back to high if unsupported) |
-
 ---
 
-## Repository Layout
+## Roadmap
 
-```
-MoniSave/
-├── packages/
-│   ├── heuristic-core/       # Shared evaluation, savings, pricing (no runtime deps)
-│   ├── vscode-extension/     # VS Code Chat Provider, status bar, commands, knowledge
-│   └── openclaw-plugin/      # OpenClaw hook, /savings, monisave.stats RPC
-├── README.md                 # This file (English)
-└── README.zh-CN.md           # Chinese version
-```
+- [ ] **Difficulty auto-detection** *(in development)* — heuristic classifier to pick effort automatically based on prompt complexity
+- [x] Manual effort switching (VS Code + OpenClaw)
+- [x] Real-time token savings in status bar
+- [x] Team knowledge cards (`@monisave`)
+- [x] Chinese / English UI
 
 ---
 
