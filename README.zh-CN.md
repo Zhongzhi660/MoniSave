@@ -16,7 +16,7 @@ MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制
 |--|---------|----------------------|
 | 按消息控制 effort 档位 | ✅ 点状态栏或 `Ctrl+Shift+E` | ✅ `/monisave_low`、`/monisave_high`… |
 | 实时查看节省的 token | ✅ 状态栏 | ✅ `/savings` |
-| 保存团队知识卡片 | ✅ `@monisave /save` — 让团队不再重复解决同样的问题 | — |
+| 保存团队知识卡片 | ✅ `@monisave /save` — prevent redundant tokens on solved similar problems | — |
 | 中英文切换 | ✅ 一条命令 | — |
 
 ---

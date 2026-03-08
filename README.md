@@ -16,7 +16,7 @@ MoniSave connects Claude's extended thinking to VS Code and OpenClaw — and let
 |--|---------|---------------------|
 | Choose effort per message | ✅ Click status bar or `Ctrl+Shift+E` | ✅ `/monisave_low`, `/monisave_high` … |
 | See real-time token savings | ✅ Status bar | ✅ `/savings` |
-| Save team knowledge | ✅ `@monisave /save` — so your team stops solving the same problems twice | — |
+| Save team knowledge | ✅ `@monisave /save` — prevent redundant tokens on solved similar problems | — |
 | Switch language (中/EN) | ✅ One command | — |
 
 ---
