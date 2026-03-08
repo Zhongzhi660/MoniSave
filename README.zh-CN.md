@@ -4,6 +4,8 @@
 
 MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制每条消息使用多少推理算力。
 
+[![VS Code 扩展市场](https://img.shields.io/badge/VS%20Code%20扩展市场-MoniSave-blue?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=MoniSave.monisave)
+
 > ⚠️ **难度自动感知功能正在调试中，暂不可用。** 手动档位切换及其他所有功能均已可用。
 
 ---
@@ -14,20 +16,20 @@ MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制
 |--|---------|----------------------|
 | 按消息控制 effort 档位 | ✅ 点状态栏或 `Ctrl+Shift+E` | ✅ `/monisave_low`、`/monisave_high`… |
 | 实时查看节省的 token | ✅ 状态栏 | ✅ `/savings` |
-| 保存团队知识卡片 | ✅ `@monisave /save` | — |
+| 保存团队知识卡片 | ✅ `@monisave /save` — 让团队不再重复解决同样的问题 | — |
 | 中英文切换 | ✅ 一条命令 | — |
 
 ---
 
 ## VS Code
 
-### 第一步 — 选择模型
+### 第一步. 选择模型
 
 打开 VS Code Chat，选择 **MoniSave (Claude Sonnet + thinking)**。
 
 ![在 VS Code Chat 中选择 MoniSave 模型](figs/vscode_1.png)
 
-### 第二步 — 一键切换档位
+### 第二步. 一键切换档位
 
 点击状态栏或按 **`Ctrl+Shift+E`** 打开档位选择器。
 
@@ -37,7 +39,7 @@ MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制
 
 ![命令面板中的所有 MoniSave 命令](figs/vscode_3.png)
 
-### 第三步 — 用 @monisave 管理团队知识
+### 第三步. 用 @monisave 管理团队知识
 
 在 Chat 里输入 `@monisave /` 查看所有知识命令：
 
@@ -50,7 +52,7 @@ MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制
 | `/list` | 显示所有卡片 |
 | `/useful` · `/notuseful` | 给上一条回答打分 |
 
-### 第四步 — 验证是否生效
+### 第四步. 验证是否生效
 
 打开 **帮助 → 切换开发人员工具 → Console**，筛选 `MoniSave`：
 
@@ -61,7 +63,7 @@ MoniSave 把 Claude 扩展思考接入 VS Code 和 OpenClaw，让你精确控制
 ### 安装与配置
 
 ```
-1. 在 VS Code 扩展市场搜索并安装 "MoniSave"
+1. 在 VS Code 扩展市场安装 → https://marketplace.visualstudio.com/items?itemName=MoniSave.monisave
 2. 执行 "MoniSave: Manage API Key"，填入你的 Anthropic API Key
 3. 在 Chat 里选择 MoniSave 模型，即可使用
 ```
@@ -83,7 +85,9 @@ MoniSave 作为插件运行在你的 OpenClaw bot（Telegram 等）中。
 
 ### 档位切换
 
+<div align="center">
 <img src="figs/Openclaw.jpg" width="320" alt="OpenClaw bot — 手机端档位切换演示" />
+</div>
 
 ```
 /monisave_mode        → 查看当前档位

@@ -4,6 +4,8 @@
 
 MoniSave connects Claude's extended thinking to VS Code and OpenClaw — and lets you control exactly how much reasoning each message gets.
 
+[![VS Code Marketplace](https://img.shields.io/badge/VS%20Code%20Marketplace-MoniSave-blue?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=MoniSave.monisave)
+
 > ⚠️ **Difficulty auto-detection is under active development and not yet available.** Manual effort switching and all other features are fully functional.
 
 ---
@@ -14,20 +16,20 @@ MoniSave connects Claude's extended thinking to VS Code and OpenClaw — and let
 |--|---------|---------------------|
 | Choose effort per message | ✅ Click status bar or `Ctrl+Shift+E` | ✅ `/monisave_low`, `/monisave_high` … |
 | See real-time token savings | ✅ Status bar | ✅ `/savings` |
-| Save team knowledge | ✅ `@monisave /save` | — |
+| Save team knowledge | ✅ `@monisave /save` — so your team stops solving the same problems twice | — |
 | Switch language (中/EN) | ✅ One command | — |
 
 ---
 
 ## VS Code
 
-### 1 — Pick the model
+### 1. Pick the model
 
 Open VS Code Chat and select **MoniSave (Claude Sonnet + thinking)**.
 
 ![Select MoniSave model in VS Code Chat](figs/vscode_1.png)
 
-### 2 — Switch effort in one click
+### 2. Switch effort in one click
 
 Click the status bar or press **`Ctrl+Shift+E`** to open the effort picker.
 
@@ -37,7 +39,7 @@ Or use the command palette (`Ctrl+Shift+P` → type **MoniSave**):
 
 ![All MoniSave commands in command palette](figs/vscode_3.png)
 
-### 3 — Use @monisave for team knowledge
+### 3. Use @monisave for team knowledge
 
 In Chat, type `@monisave /` to see all knowledge commands:
 
@@ -50,7 +52,7 @@ In Chat, type `@monisave /` to see all knowledge commands:
 | `/list` | Show all cards |
 | `/useful` · `/notuseful` | Rate the last answer |
 
-### 4 — Verify it's working
+### 4. Verify it's working
 
 Open **Help → Toggle Developer Tools → Console** and filter by `MoniSave`:
 
@@ -83,7 +85,9 @@ MoniSave runs as a plugin inside your OpenClaw bot (Telegram or similar).
 
 ### Switching effort
 
+<div align="center">
 <img src="figs/Openclaw.jpg" width="320" alt="OpenClaw bot — effort mode switching on mobile" />
+</div>
 
 ```
 /monisave_mode        → show current mode
