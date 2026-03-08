@@ -2,6 +2,11 @@
   "name": "monisave",
   "displayName": "MoniSave",
   "version": "0.1.0",
+  "publisher": "MoniSave",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zhongzhi660/MoniSave"
+  },
   "description": "Thinking token optimization: heuristic effort + savings in status bar",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],

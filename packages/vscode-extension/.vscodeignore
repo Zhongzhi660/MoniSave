@@ -1,18 +1,28 @@
-# Source and configs not needed in packaged extension
+# Only include out/ (excluding test and maps), package.json, LICENSE
+# Exclude everything by default, then exceptions are in vsce's include logic
+
+# Source
 src/**
 tsconfig.json
 .vscode/**
 
-# Tests and test runtime artifacts
+# Parent monorepo dirs - vsce must not follow these
+../**
+../../**
+
+# Dependencies
+node_modules/**
+
+# Tests (out/test references ../../ paths that break vsce)
 out/test/**
+
+# Source maps and declaration maps (contain ../../ source references)
+out/**/*.map
+**/*.map
+
+# Misc
 .vscode-test/**
 .vscode-test-user-data/**
-
-# Workspace and local artifacts
-node_modules/.cache/**
 coverage/**
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+*.vsix

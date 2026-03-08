@@ -12,3 +12,4 @@ pnpm-debug.log*
 .vscode-test/
 packages/vscode-extension/.vscode-test-user-data/
 .cursor/
+docs/
