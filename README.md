@@ -32,12 +32,6 @@
 | **@monisave chat participant** | Use `/save`, `/useful`, `/notuseful`, `/search`, `/list` directly in VS Code Chat |
 | **Chinese / English UI** | Switch language via command or settings (`monisave.language`) |
 
-<!-- Screenshot: status bar showing savings and current effort mode -->
-<!-- ![Status bar](docs/images/statusbar.png) -->
-
-<!-- GIF: clicking status bar to switch effort mode -->
-<!-- ![Effort switch](docs/images/effort-switch.gif) -->
-
 ### Quick Start
 
 **1. Install**
@@ -64,8 +58,7 @@ Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/item
 3. Check the **status bar** (bottom-right) for live savings.
 4. **Click the status bar** (or press `Ctrl+Shift+E`) to switch effort mode instantly.
 
-<!-- Screenshot: model picker showing MoniSave -->
-<!-- ![Model picker](docs/images/model-picker.png) -->
+![Model picker — select MoniSave (Claude Sonnet + thinking)](figs/vscode_1.png)
 
 ### Effort Mode Switching
 
@@ -75,8 +68,9 @@ Three ways to switch:
 2. **Keyboard shortcut** — `Ctrl+Shift+E` (Mac: `Cmd+Shift+E`).
 3. **Command palette** — `Ctrl+Shift+P` → `MoniSave: Select effort mode`.
 
-<!-- GIF: switching effort mode from status bar -->
-<!-- ![Switch effort](docs/images/switch-effort.gif) -->
+![Effort mode picker — auto / low / medium / high / max](figs/vscode_2.png)
+
+![Command palette — all MoniSave commands](figs/vscode_3.png)
 
 ### Team Knowledge Cards (`@monisave`)
 
@@ -90,8 +84,7 @@ In VS Code Chat, mention **`@monisave`** and use slash sub-commands:
 | `@monisave /search <keywords>` | Search knowledge cards by keywords |
 | `@monisave /list` | List all knowledge cards with full content |
 
-<!-- Screenshot: @monisave /list output in Chat -->
-<!-- ![Knowledge cards](docs/images/knowledge-list.png) -->
+![`@monisave` sub-commands in VS Code Chat](figs/vscode_4.png)
 
 ### Verifying Effort Switching Works
 
@@ -116,8 +109,7 @@ In VS Code Chat, mention **`@monisave`** and use slash sub-commands:
 | **Gateway RPC** | `monisave.stats` RPC returns `saved_tokens`, `saved_usd`, `request_count` |
 | **Manual mode commands** | `monisave_mode`, `monisave_auto`, `monisave_low`, `monisave_medium`, `monisave_high`, `monisave_max` |
 
-<!-- Screenshot: /savings output in OpenClaw chat -->
-<!-- ![OpenClaw savings](docs/images/openclaw-savings.png) -->
+![OpenClaw bot on Telegram — mode switching commands](figs/Openclaw.jpg)
 
 ### Quick Start
 
@@ -154,9 +146,6 @@ See `packages/openclaw-plugin/CONFIG.example.md`. Map tiers to your model IDs:
 - Chat as usual — the plugin auto-selects model via `before_prompt_build`.
 - Run `/savings` to see session token savings.
 - Use Gateway RPC `monisave.stats` for programmatic access.
-
-<!-- GIF: /savings command output in OpenClaw -->
-<!-- ![OpenClaw savings GIF](docs/images/openclaw-savings.gif) -->
 
 ### Manual Mode Commands
 

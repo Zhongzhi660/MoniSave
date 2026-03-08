@@ -32,12 +32,6 @@
 | **@monisave 聊天参与者** | 在 VS Code Chat 中直接用 `/save`、`/useful`、`/notuseful`、`/search`、`/list` |
 | **中英文界面** | 通过命令或设置（`monisave.language`）一键切换语言 |
 
-<!-- 截图：状态栏显示节省金额与当前档位 -->
-<!-- ![状态栏](docs/images/statusbar.png) -->
-
-<!-- GIF：点击状态栏切换档位 -->
-<!-- ![档位切换](docs/images/effort-switch.gif) -->
-
 ### 快速上手
 
 **1. 安装**
@@ -64,8 +58,7 @@
 3. 查看右下角**状态栏**，实时看到节省数据。
 4. **点击状态栏**（或按 `Ctrl+Shift+E`）可随时切换档位。
 
-<!-- 截图：模型选择器中的 MoniSave -->
-<!-- ![模型选择器](docs/images/model-picker.png) -->
+![模型选择器 — 选择 MoniSave (Claude Sonnet + thinking)](figs/vscode_1.png)
 
 ### 档位切换方式
 
@@ -75,8 +68,9 @@
 2. **键盘快捷键** — `Ctrl+Shift+E`（Mac：`Cmd+Shift+E`）。
 3. **命令面板** — `Ctrl+Shift+P` → `MoniSave: Select effort mode`。
 
-<!-- GIF：通过状态栏切换档位 -->
-<!-- ![切换档位](docs/images/switch-effort.gif) -->
+![档位选择弹窗 — auto / low / medium / high / max](figs/vscode_2.png)
+
+![命令面板 — 所有 MoniSave 命令](figs/vscode_3.png)
 
 ### 团队知识卡片（`@monisave`）
 
@@ -90,8 +84,7 @@
 | `@monisave /search <关键词>` | 按关键词搜索知识卡片 |
 | `@monisave /list` | 列出所有知识卡片及完整内容 |
 
-<!-- 截图：@monisave /list 在 Chat 中的输出 -->
-<!-- ![知识卡片](docs/images/knowledge-list.png) -->
+![@monisave 在 VS Code Chat 中的子命令列表](figs/vscode_4.png)
 
 ### 如何验证档位切换是否生效
 
@@ -116,8 +109,7 @@
 | **Gateway RPC** | `monisave.stats` 返回 `saved_tokens`、`saved_usd`、`request_count` |
 | **手动模式命令** | `monisave_auto`、`monisave_low`、`monisave_medium`、`monisave_high`、`monisave_max` |
 
-<!-- 截图：/savings 在 OpenClaw 对话中的输出 -->
-<!-- ![OpenClaw 节省](docs/images/openclaw-savings.png) -->
+![OpenClaw bot（Telegram）— 档位切换命令演示](figs/Openclaw.jpg)
 
 ### 快速上手
 
@@ -154,9 +146,6 @@ cd packages/openclaw-plugin && npm run build
 - 正常对话 — 插件通过 `before_prompt_build` 自动选择模型。
 - 执行 `/savings` 查看本会话节省数据。
 - 通过 Gateway RPC `monisave.stats` 以编程方式获取统计。
-
-<!-- GIF：OpenClaw 中 /savings 命令输出 -->
-<!-- ![OpenClaw 节省 GIF](docs/images/openclaw-savings.gif) -->
 
 ### 手动模式命令
 
